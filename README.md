@@ -13,8 +13,8 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[checker]: ./output_images/undistorted_checker.jpg "Calib"
-[undistort]: ./output_images/undistorted_road.jpg "Undistort"
+[checker]: ./output_images/undistored_checker.jpg "Calib"
+[undistort]: ./output_images/undistored_road.jpg "Undistort"
 [warp_src]: ./output_images/warp_source.jpg "Warp Src"
 [warp_src_zoom]: ./output_images/warp_source_zoomed.jpg "Warp Src Zoom"
 [warp]: ./output_images/warped_road.jpg "Warp"
@@ -23,8 +23,8 @@ The goals / steps of this project are the following:
 [sobel_mag_bin]: ./output_images/sobel_mag_bin.jpg "SobelMagBin"
 [sobel_dir]: ./output_images/sobel_dir.jpg "SobelDir"
 [sobel_dir_bin]: ./output_images/sobel_dir_bin.jpg "SobelDirBin"
-[sat]: ./output_images/saturation.jpg "Sat"
-[sat_bin]: ./output_images/saturation_bin.jpg "SatBin"
+[sat]: ./output_images/satuation.jpg "Sat"
+[sat_bin]: ./output_images/satuation_bin.jpg "SatBin"
 [combo]: ./output_images/combined_bin.jpg "Combo"
 
 [hist]: ./output_images/binary_histogram.jpg "hist"
@@ -140,7 +140,7 @@ From the binary image, the lane lines become clear with occasional noise.  To fi
 
 The x axis represents columns in the combined binary image and the y axis is the number of (binary) pixels are 1 (and not 0) within that row. From looking at the peaks of the histogram and dividing along the center (pixel 640 in the horizontal direction), the initial position (lowest in the image) of both lanes are determined.  From here, we do a window search, shown below and explained after the image:
 
-![alt text][hist]
+![alt text][win]
 
 The windows heights are 40 pixels and widths are 150 pixels.  The first window is at the lowest part of the image and centered along the initial left and right values (determined from the histogram). All pixels within the lowest window are identified (and colored for visualization). The windows then shift up until they reach the highest pixels. With every shift up, the windows can be re-centered if more than 50 pixels are idntified in the window.  If so, the next window is centered around the mean of the column values of the current window. 
 
