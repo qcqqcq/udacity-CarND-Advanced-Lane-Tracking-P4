@@ -100,6 +100,8 @@ The three transformations applied are
 * Sobel direction
 * Saturation level (after HSL conversion)
 
+### Sobel Magnitude
+
 Sobel magnitude is calculated by applied Sobel in X and y directions (thus forming a 2D vector at every pixel) and taking the magnitude. The image below show the transformation:
 
 ![alt text][sobel_mag]
@@ -107,6 +109,8 @@ Sobel magnitude is calculated by applied Sobel in X and y directions (thus formi
 From the colorbar (and after viewing other test images), accepted values are determined to be in the range of [30-100].  Thresholding on this (within range = 1, outside range = 0) results in the following binary image:
 
 ![alt text][sobel_mag_bin]
+
+### Sobel Direction
 
 The same procedure is done for the direction of the Sobel vectors:
 
@@ -116,6 +120,8 @@ where accepted values are in [0-0.4], resulting in the following binary:
 
 ![alt text][sobel_dir_bin]
 
+### Color Saturation
+
 After converting to HSL space, thresholding was only performed for the saturation channel:
 
 ![alt text][sat]
@@ -123,6 +129,8 @@ After converting to HSL space, thresholding was only performed for the saturatio
 and accepting only values [120,220] gives:
 
 ![alt text][sat_bin]
+
+### Combining Binary Images
 
 Combining the various binary images into a final image can be done a number of ways.  Here, the combined binary chosen to be the union of the Sobel magnitude binary and saturation binary.  The Sobel direction binary was deemed too noisy. The combined binary is shown below:
 
