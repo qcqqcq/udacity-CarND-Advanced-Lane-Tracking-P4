@@ -74,8 +74,9 @@ A wrapper is then built around openCV's undistort function to produce the follow
 
 *This code is tracktools.py:  ImageProcessor.calibrate\_camera*
 
-##Perspective Transform
 
+
+##Perspective Transform
 
 A perspective transform takes the image from the vehcile view to a bird's eye view. To acheive this, "source" points must be identified which correspond to 4 points that form a rectangle in the bird's eye view. This only needs to be done once and can be applied to all other images as long as the camera is not moved.  Source point identification can be done using machine vision but here it is manually selected using trial and error.
 
@@ -92,8 +93,9 @@ For the rest of the writeup, we use a more typical image with curved roads found
 Also notice how this process also sets a region of interest.
 
 *This code is tracktools.py:  ImageProcessor.set\_warp\_points*
-* and ImageProcessor.get\_perspective\_transforms*
-* and ImageProcessor.warp\_perspective*
+*and ImageProcessor.get\_perspective\_transforms*
+*and ImageProcessor.warp\_perspective*
+
 
 
 ##Thresholding to get a binary image
@@ -132,7 +134,6 @@ where accepted values are in [0-0.4], resulting in the following binary:
 
 
 ### Color Saturation
-
 After converting to HSL space, thresholding was only performed for the saturation channel:
 
 ![alt text][sat]
@@ -144,7 +145,6 @@ and accepting only values [120,220] gives:
 *This code is tracktools.py:  Thresher.saturation\_threshold*
 
 ### Combining Binary Images
-
 Combining the various binary images into a final image can be done a number of ways.  Here, the combined binary chosen to be the union of the Sobel magnitude binary and saturation binary.  The Sobel direction binary was deemed too noisy. The combined binary is shown below:
 
 ![alt text][combo]
@@ -154,8 +154,8 @@ A weighted average was also attempted but did not shown noticable improvement (n
 *This code is tracktools.py:  Thresher.get\_binary*
 
 
-## Identifying which binary pixels are part of the lane lines
 
+## Identifying which binary pixels are part of the lane lines
 
 From the binary image, the lane lines become clear with occasional noise.  To fit a polynomial and guess the middle of the lane lines are, we have to further refine which pixels are lanes and which (left or right) lane the pixels belong to. To make an initial guess of the lane positions, a histogram of the binary values along each column is calculated.  The histgram only evaluates pixels in the lower half of the image.
 
@@ -168,7 +168,7 @@ The x axis represents columns in the combined binary image and the y axis is the
 ![alt text][win]
 
 *This code is tracktools.py:  Lanetracker.\_find\_lane\_in\_window*
-* and Lanetracker.search\_entire\_image*
+*and Lanetracker.search\_entire\_image*
 
 
 The windows heights are 40 pixels and widths are 150 pixels.  The first window is at the lowest part of the image and centered along the initial left and right values (determined from the histogram). All pixels within the lowest window are identified (and colored for visualization). The windows then shift up until they reach the highest pixels. With every shift up, the windows can be re-centered if more than 50 pixels are idntified in the window.  If so, the next window is centered around the mean of the column values of the current window. 
@@ -181,11 +181,14 @@ Once this whole-image search is completed, in the next frame left and right lane
 
 *This code is tracktools.py:  Lanetracker.find\_near\_previous*
 
+
 ### Radius of curvature
 
 To calculate the radius of curvature, a conversion from pixels to meters is required. By assuming a standard lane width of 3.7 meters and counting horizontal pixels, it is determined that there are 3.7/672 pixels per meter in the horizontal direction.  By assuming a lane segment is 3 meters in the vertical direction, it is determined that there are 3/65 meters per pixel in the vertical direction.  By using these ratios to convert to meters and re-fitting the polynomial, the polynomial coefficients are used to calculat the radius of curvature for each lane in each frame, evaluated at the bottom of the frame. It was found that the measurement was quite sensitive and noisey and perhaps not reliable using this approach.
 
 *This code is tracktools.py:  Lanetracker.get\_curvature*
+
+
 
 ## Transforming back to the camera view and pipelining to overlay on a video
 
@@ -202,6 +205,8 @@ Once lanes are verified, they warped back to the camera view and overlayed on to
 These steps are then placed in a pipeline and used to produce the following video:
 
 [Video Link Here](https://youtu.be/_2KKQbVfB2E)
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/_2KKQbVfB2E/0.jpg)](https://www.youtube.com/watch?v=_2KKQbVfB2E)
 
 ## Discussion
 
