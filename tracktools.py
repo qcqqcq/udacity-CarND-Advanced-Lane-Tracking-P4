@@ -302,7 +302,7 @@ class Thresher():
         
         thresh = self.s_thresh
         binary_output = np.zeros_like(s_channel)
-        binary_output[(s_channel => thresh[0]) & (s_channel <= thresh[1])] = 1
+        binary_output[(s_channel >= thresh[0]) & (s_channel <= thresh[1])] = 1
 
         # Return the binary
         return binary_output

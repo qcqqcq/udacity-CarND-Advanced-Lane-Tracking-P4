@@ -13,8 +13,8 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[checker]: ./output_images/undistored_checker.jpg "Calib"
-[undistort]: ./output_images/undistored_road.jpg "Undistort"
+[checker]: ./output_images/undistorted_checker.jpg "Calib"
+[undistort]: ./output_images/undistorted_road.jpg "Undistort"
 [warp_src]: ./output_images/warp_source.jpg "Warp Src"
 [warp_src_zoom]: ./output_images/warp_source_zoomed.jpg "Warp Src Zoom"
 [warp]: ./output_images/warped_road.jpg "Warp"
@@ -23,8 +23,8 @@ The goals / steps of this project are the following:
 [sobel_mag_bin]: ./output_images/sobel_mag_bin.jpg "SobelMagBin"
 [sobel_dir]: ./output_images/sobel_dir.jpg "SobelDir"
 [sobel_dir_bin]: ./output_images/sobel_dir_bin.jpg "SobelDirBin"
-[sat]: ./output_images/satuation.jpg "Sat"
-[sat_bin]: ./output_images/satuation_bin.jpg "SatBin"
+[sat]: ./output_images/saturation.jpg "Sat"
+[sat_bin]: ./output_images/saturation_bin.jpg "SatBin"
 [combo]: ./output_images/combined_bin.jpg "Combo"
 
 [hist]: ./output_images/binary_histogram.jpg "hist"
