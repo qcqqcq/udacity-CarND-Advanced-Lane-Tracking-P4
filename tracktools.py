@@ -14,72 +14,6 @@ def get_img_from_filename(file_name):
     return mpimg.imread(file_name)
 
 
-class LaneVerifier:
-    def __init__(self):
-        self.left_history = []
-        self.right_history = []
-        self.history_length = 20
-        self.sd_width_thresh = 80 # in pixels
-        self.mean_width_thresh = 900 # in pixels
-        
-        self.last_left_good_poly_cols = None
-        self.last_right_good_poly_cols = None
-
-    def ingest_lanes(self,left_tracker,right_tracker):
-
-        self.left_history.append(left_tracker)
-        self.right_history.append(right_tracker)
-        if len(self.left_history) > self.history_length:
-            self.left_history.pop(0)
-        if len(self.right_history) > self.history_length:
-            self.right_history.pop(0)
-                
-        # Smoothen lane tracks using history        
-        left_tracker.smooth_poly_cols = self.smooth_lane(self.left_history)
-        right_tracker.smooth_poly_cols = self.smooth_lane(self.right_history)
-        
-        
-        # Check consistency for the pair
-        if self.pair_consistent(left_tracker.smooth_poly_cols,right_tracker.smooth_poly_cols):
-            self.last_left_good_poly_cols = left_tracker.smooth_poly_cols
-            self.last_right_good_poly_cols = right_tracker.smooth_poly_cols
-            #print('consisten')
-        
-        elif (self.last_left_good_poly_cols is not None 
-              and self.last_right_good_poly_cols is not None):
-            
-            left_tracker.smooth_poly_cols = self.last_left_good_poly_cols
-            right_tracker.smooth_poly_cols = self.last_right_good_poly_cols
-        
-            #print('lanes no good')
-
-
-    def smooth_lane(self,history):
-        '''Take weighted average of last lane detections'''
-
-        poly_cols = np.array([track.poly_cols for track in history]) 
-        smooth_poly = np.average(poly_cols,axis=0
-                                 ,weights=1+np.arange(len(history)))
-
-        return smooth_poly
-        
-    def pair_consistent(self,left_smooth_poly_cols,right_smooth_poly_cols):
-        '''Do checks at the pair level'''
-        consistent = True
-        
-        # Ensure parallel
-        self.pixel_width = right_smooth_poly_cols - left_smooth_poly_cols
-        
-        #print('SD %.2f'%np.std(self.pixel_width))
-        #print('Mean %.2f'%np.average(self.pixel_width))
-        if np.std(self.pixel_width) > self.sd_width_thresh:
-            consistent = False
-        elif np.average(self.pixel_width) > self.mean_width_thresh:
-            consistent = False
-        
-        return consistent
-
-
 
 class ImageProcessor():
     def __init__(self):
@@ -368,7 +302,7 @@ class Thresher():
         
         thresh = self.s_thresh
         binary_output = np.zeros_like(s_channel)
-        binary_output[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
+        binary_output[(s_channel => thresh[0]) & (s_channel <= thresh[1])] = 1
 
         # Return the binary
         return binary_output
@@ -631,12 +565,72 @@ class Window():
         if self.top <= 0:
             self.top = 0
 
+class LaneVerifier:
+    def __init__(self):
+        self.left_history = []
+        self.right_history = []
+        self.history_length = 10
+        self.sd_width_thresh = 80 # in pixels
+        self.mean_width_thresh = 900 # in pixels
+        
+        self.last_left_good_poly_cols = None
+        self.last_right_good_poly_cols = None
 
-    
-if __name__ == '__main__':
-    # Test code
-    win = Window()
-    
+    def ingest_lanes(self,left_tracker,right_tracker):
+
+        self.left_history.append(left_tracker)
+        self.right_history.append(right_tracker)
+        if len(self.left_history) > self.history_length:
+            self.left_history.pop(0)
+        if len(self.right_history) > self.history_length:
+            self.right_history.pop(0)
+                
+        # Smoothen lane tracks using history        
+        left_tracker.smooth_poly_cols = self.smooth_lane(self.left_history)
+        right_tracker.smooth_poly_cols = self.smooth_lane(self.right_history)
+        
+        
+        # Check consistency for the pair
+        if self.pair_consistent(left_tracker.smooth_poly_cols,right_tracker.smooth_poly_cols):
+            self.last_left_good_poly_cols = left_tracker.smooth_poly_cols
+            self.last_right_good_poly_cols = right_tracker.smooth_poly_cols
+            #print('consisten')
+        
+        elif (self.last_left_good_poly_cols is not None 
+              and self.last_right_good_poly_cols is not None):
+            
+            left_tracker.smooth_poly_cols = self.last_left_good_poly_cols
+            right_tracker.smooth_poly_cols = self.last_right_good_poly_cols
+        
+            #print('lanes no good')
+
+
+    def smooth_lane(self,history):
+        '''Take weighted average of last lane detections'''
+
+        poly_cols = np.array([track.poly_cols for track in history]) 
+        smooth_poly = np.average(poly_cols,axis=0
+                                 ,weights=1+np.arange(len(history)))
+
+        return smooth_poly
+        
+    def pair_consistent(self,left_smooth_poly_cols,right_smooth_poly_cols):
+        '''Do checks at the pair level'''
+        consistent = True
+        
+        # Ensure parallel
+        self.pixel_width = right_smooth_poly_cols - left_smooth_poly_cols
+        
+        #print('SD %.2f'%np.std(self.pixel_width))
+        #print('Mean %.2f'%np.average(self.pixel_width))
+        if np.std(self.pixel_width) > self.sd_width_thresh:
+            consistent = False
+        elif np.average(self.pixel_width) > self.mean_width_thresh:
+            consistent = False
+        
+        return consistent
+
+
 if __name__ == '__main__':
     # Test code
     tools = CameraTools()
