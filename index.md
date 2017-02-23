@@ -3,20 +3,19 @@
 One of the cool things about autonomous vehicle technlogies is that it takes ideas from all fields. While deep neural networks are all the rage nowadays, classical machine vision still has it's place in the field. Will this still be the case in the next 30 years?  Only time will tell.  In the meanwhile, check out what I did using a simple workflow with Sobel operators and a few transforms identify and track lane lines. I'll start out showing the end results first:
 
 
-[Video Link Here](https://youtu.be/_2KKQbVfB2E)
+
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/_2KKQbVfB2E/0.jpg)](https://www.youtube.com/watch?v=_2KKQbVfB2E)
+If clicking the above image doesn't take you to the video, trying using the [Video Link Here](https://youtu.be/_2KKQbVfB2E)
 
+## Overall Steps
 
+To create the video, the following steps were taken:
 
-dvanced Lane Finding Project**
-
-The goals / steps of this project are the following:
-
-* Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
+* Calibrate the camera using given a set of chessboard images to correct for radial and tangental distortions.
 * Apply a distortion correction to raw images.
-* Apply a perspective transform to rectify binary image ("birds-eye view").
-* Use color transforms, gradients, etc., to create a thresholded binary image.
+* Apply a perspective transform to rectify the image ("birds-eye view").
+* Use color transforms, gradients, etc. and apply thresholds to obtain a binary image
 * Detect lane pixels and fit to find the lane boundary.
 * Determine the curvature of the lane and vehicle position with respect to center.
 * Warp the detected lane boundaries back onto the original image.
@@ -43,71 +42,34 @@ The goals / steps of this project are the following:
 
 [overlaid]: ./output_images/overlaid.jpg "ol"
 
-## Overall Architecture
-
-There were two main tasks for this project
-
-* Code up a pipeline for taking in an image and returning an annotated image that has lane markings and some physical measurements
-* Tune the parameters of the pipeline to produce good lane tracking on the project video (project_video.mp4) 
-
-The parameter tuning and visualization is found in Jupyter notebook advanced_lane_lanes.ipynb while the main logic (backend) is in tracktools.py. Classes are as follows:
-
-
-* ImageProcessor: Does all image processing
- * Calibrates camera
- * Undistorts images using calibration
- * Perspective transforms
-
-* Thresher:  Does all the tresholding
- * Calculates Sobel and applies thresholds
- * Converts to HSL and applies thresholds
-
-* LaneTracker:  Tracks a lane given a binary image
- * Searches for lanes in whole image using sliding window
- * Searches for lanes in small area around previously found lanes
- * Applies polynomial fit
- * Calculates lane curvature
-
-* LaneVerifier: Verifies lanes
- * Uses history to smooth lane lines
- * Ensures lane are roughly parallel
-
-
 ##Camera Calibration
 
-
-Checkerboard calibration images are given in ./camera\_cal/calibration*.jpg.  These are 9x6 flat boards so objects points are set accordingly and are the same for each image. For image points, openCV's findChessboardCorners is used. Distortion coefficients are then found for these pairs of object and images points using openCV's calibrateCamera function.
-
-A wrapper is then built around openCV's undistort function to produce the following images:
+Checkerboard calibration images are given in the repository  They tell the camera what a flat, straight, perpendicular lines look like so it can apply the appropriate corrections.  Check out how it corrects the below image:
 
 ![alt text][checker]
+
+Notice how in the left image, you can intuitively tell that something's not quite right. If you look closely, you'll notice the checkerboard lines are quite...straight.  They seem "bent" somehow.  This is kind of [distortion](https://en.wikipedia.org/wiki/Distortion_(optics)) is actually present in almost any lens out there. You probably didn't notice since today's high tech cameras where the lens position never changes already correct for this. Also, you probably aren't taking pictures of checkerboards so it's not actually that easy to tell.
+
+Below is the correction applied to a real world image.  See any differences?
+
 ![alt text][undistort]
 
-*This code is tracktools.py:  ImageProcessor.calibrate\_camera*
-
-
+I can't tell either.  I guess maybe if I take out the photo editor and overlay some lines maybe I can tell. But for most artistic pictures of the kids, this kind of thing probably isn't noticable.  BUT, since we're doing careful lane tracking here, we need to be a bit more careful.
 
 ##Perspective Transform
 
 A perspective transform takes the image from the vehcile view to a bird's eye view. To acheive this, "source" points must be identified which correspond to 4 points that form a rectangle in the bird's eye view. This only needs to be done once and can be applied to all other images as long as the camera is not moved.  Source point identification can be done using machine vision but here it is manually selected using trial and error.
 
-The image from ./test_images/straight_lines1.jpg was used. Source points are shown below.  These points resulted in two parallel lines after applying the transform.
+A test image with straight lanes is used. Source points are shown below.  These points resulted in two parallel lines after applying the transform.
 
 ![alt text][warp_src] 
 ![alt text][warp_src_zoom] 
 
-For the rest of the writeup, we use a more typical image with curved roads found in ./test_images/test1.jpg.  Here is the perpsective warp applied to it:
-
+Here's the perpsective transform applied to a more curvey road:
 
 ![alt text][warp] 
 
-Also notice how this process also sets a region of interest.
-
-*This code is tracktools.py:  ImageProcessor.set\_warp\_points*
-*and ImageProcessor.get\_perspective\_transforms*
-*and ImageProcessor.warp\_perspective*
-
-
+Also notice how this process also sets a region of interest.  It allows us to ignore anything outside of this bird's eye view. This comes in handy when we're applying transforms and deciding on which threshold values to use.
 
 ##Thresholding to get a binary image
 
