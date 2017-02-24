@@ -9,9 +9,9 @@ description: Tracking lanes using classical machine vision for the Udacity AV Na
 One of the cool things about autonomous vehicle technlogies is that it takes ideas from all fields. While deep neural networks are all the rage nowadays, classical machine vision still has it's place in the field. Will this still be the case in the next 30 years?  Only time will tell.  In the meanwhile, check out what I did using a simple workflow with Sobel operators and a few transforms identify and track lane lines. I'll start out showing the end results first:
 
 
-
-
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/_2KKQbVfB2E/0.jpg)](https://www.youtube.com/watch?v=_2KKQbVfB2E)
+
+
 If clicking the above image doesn't take you to the video, trying using the [Video Link Here](https://youtu.be/_2KKQbVfB2E)
 
 ## Overall Steps
