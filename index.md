@@ -1,5 +1,4 @@
 ---
-layout: page
 title: Lane Tracking for Autonomous Vehicles
 tagline: Tracking lanes using classical machine vision for the Udacity AV Nanodegree Program
 description: Tracking lanes using classical machine vision for the Udacity AV Nanodegree Program
