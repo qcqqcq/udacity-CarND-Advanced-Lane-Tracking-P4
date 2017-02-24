@@ -48,7 +48,7 @@ To create the video, the following steps were taken:
 
 [overlaid]: ./output_images/overlaid.jpg "ol"
 
-##Camera Calibration
+## Camera Calibration
 
 Checkerboard calibration images are given in the repository  They tell the camera what a flat, straight, perpendicular lines look like so it can apply the appropriate corrections.  Check out how it corrects the below image:
 
@@ -62,7 +62,7 @@ Below is the correction applied to a real world image.  See any differences?
 
 I can't tell either.  I guess maybe if I take out the photo editor and overlay some lines maybe I can tell. But for most artistic pictures of the kids, this kind of thing probably isn't noticable.  BUT, since we're doing careful lane tracking here, we need to be a bit more careful.
 
-##Perspective Transform
+## Perspective Transform
 
 A perspective transform takes the image from the vehcile view to a bird's eye view. To acheive this, "source" points must be identified which correspond to 4 points that form a rectangle in the bird's eye view. This only needs to be done once and can be applied to all other images as long as the camera is not moved.  Source point identification can be done using machine vision but here it is manually selected using trial and error.
 
@@ -77,9 +77,9 @@ Here's the perpsective transform applied to a more curvey road:
 
 Also notice how this process also sets a region of interest.  It allows us to ignore anything outside of this bird's eye view. This comes in handy when we're applying transforms and deciding on which threshold values to use.
 
-##Thresholding to get a binary image
+## Thresholding to get a binary image
 
-Now that image has been transformed to a bird's eye view (which also identifies a region of interest), lanes are identified.  In this approach, various transforms are applied and threshold values are chosen based on qualitative evaluation based on test images and the project video.  
+Now that image has been transformed to a bird's eye view (which also identifies a region of interest), lanes are identified.  In this approach, various transforms are applied and threshold values are chosen based on qualitative evaluation based on test images and the project video. We then form binary images where if the transformed pixel has values within the threshold range, we set that pixel to 1, otherwise set it to 0.  This gives a binary image.  Since might seem unclear at first if you're not from the machine vision world, so I'll outine the steps below.
 
 The three transformations applied are
 * Sobel magnitude
@@ -89,15 +89,14 @@ The three transformations applied are
 
 ### Sobel Magnitude
 
-Sobel magnitude is calculated by applied Sobel in X and y directions (thus forming a 2D vector at every pixel) and taking the magnitude. The image below show the transformation:
+Sobel magnitude is calculated by converting the image to gray scale (i.e. a black and white image) then applying the [Sobel Operator](https://en.wikipedia.org/wiki/Sobel_operator) in X and y directions (thus forming a 2D vector at every pixel) and taking the magnitude. This vector is the gradient of the pixel intensities. The image below show the transformation:
 
 ![alt text][sobel_mag]
 
-From the colorbar (and after viewing other test images), accepted values are determined to be in the range of [30-100].  Thresholding on this (within range = 1, outside range = 0) results in the following binary image:
+Here the colorbar values are the magnitutes of the Sobel vectors. After viewing a bunch of images and experimenting with different threshold values, I chose to accept only pixels in the range of [30-100].  Thresholding on this (within range = 1, outside range = 0) results in the following binary image:
 
 ![alt text][sobel_mag_bin]
 
-*This code is in Thresher.sobel\_magnitude\_threshold*
 
 ### Sobel Direction
 
@@ -109,11 +108,9 @@ where accepted values are in [0-0.4], resulting in the following binary:
 
 ![alt text][sobel_dir_bin]
 
-*This code is tracktools.py:  Thresher.sobel\_direction\_threshold*
-
 
 ### Color Saturation
-After converting to HSL space, thresholding was only performed for the saturation channel:
+Normally, images are described in terms of the pixel's RGB (red-green-blue) values. But for image processing, this is isn't always the best respresentation.  Here, we first convert the image to HSL (hue-saturation-luminance) space, then threshold only based on the saturation channel:
 
 ![alt text][sat]
 
@@ -121,17 +118,11 @@ and accepting only values [120,220] gives:
 
 ![alt text][sat_bin]
 
-*This code is tracktools.py:  Thresher.saturation\_threshold*
 
 ### Combining Binary Images
 Combining the various binary images into a final image can be done a number of ways.  Here, the combined binary chosen to be the union of the Sobel magnitude binary and saturation binary.  The Sobel direction binary was deemed too noisy. The combined binary is shown below:
 
 ![alt text][combo]
-
-A weighted average was also attempted but did not shown noticable improvement (not shown).
-
-*This code is tracktools.py:  Thresher.get\_binary*
-
 
 
 ## Identifying which binary pixels are part of the lane lines
@@ -140,52 +131,32 @@ From the binary image, the lane lines become clear with occasional noise.  To fi
 
 ![alt text][hist]
 
-*This code is tracktools.py:  Lanetracker.get\_initial\_lane\_col*
 
 The x axis represents columns in the combined binary image and the y axis is the number of (binary) pixels are 1 (and not 0) within that row. From looking at the peaks of the histogram and dividing along the center (pixel 640 in the horizontal direction), the initial position (lowest in the image) of both lanes are determined.  From here, we do a window search, shown below and explained after the image:
 
 ![alt text][win]
 
-*This code is tracktools.py:  Lanetracker.\_find\_lane\_in\_window*
-*and Lanetracker.search\_entire\_image*
-
-
 The windows heights are 40 pixels and widths are 150 pixels.  The first window is at the lowest part of the image and centered along the initial left and right values (determined from the histogram). All pixels within the lowest window are identified (and colored for visualization). The windows then shift up until they reach the highest pixels. With every shift up, the windows can be re-centered if more than 50 pixels are idntified in the window.  If so, the next window is centered around the mean of the column values of the current window. 
 
 Once pixel values are identified, a second degree polynomial is fit along the values to determine the center of each lane (shown in yellow above).
 
-*This code is tracktools.py:  Lanetracker.get\_polyfit*
-
 Once this whole-image search is completed, in the next frame left and right lane pixels are identified if they simply lay within a margin (100 pixels to the left or 100 pixels to the right) of the polynomial fit. A new polynomial is then fit with these new pixel values.
-
-*This code is tracktools.py:  Lanetracker.find\_near\_previous*
 
 
 ### Radius of curvature
 
 To calculate the radius of curvature, a conversion from pixels to meters is required. By assuming a standard lane width of 3.7 meters and counting horizontal pixels, it is determined that there are 3.7/672 pixels per meter in the horizontal direction.  By assuming a lane segment is 3 meters in the vertical direction, it is determined that there are 3/65 meters per pixel in the vertical direction.  By using these ratios to convert to meters and re-fitting the polynomial, the polynomial coefficients are used to calculat the radius of curvature for each lane in each frame, evaluated at the bottom of the frame. It was found that the measurement was quite sensitive and noisey and perhaps not reliable using this approach.
 
-*This code is tracktools.py:  Lanetracker.get\_curvature*
-
-
-
 ## Transforming back to the camera view and pipelining to overlay on a video
 
 Before bringing the lane polynomial fits back to the image, some lane validation and smoothing steps are performed.  Every lane position is the average of the last 10 positions, which mediates jumping lane lines. There are also requirements to check that the lanes are roughly parallel and of an acceptable width. If these requirements are not met, the lane lines take on the those of the last good lane tracks.
 
-*This code is tracktools.py:  LaneVerifier.ingest_lanes*
 
 Once lanes are verified, they warped back to the camera view and overlayed on top of the original image.  From here, assuming a lane width of 3.7 meters, we can also determine the position of the vehicle laterally within the lane.  Here, positive means to the right of the center.
 
 ![alt text][overlaid]
 
-*This code is tracktools.py:  ImageProcessor.get\_offset\_from\_center*
-
-These steps are then placed in a pipeline and used to produce the following video:
-
-[Video Link Here](https://youtu.be/_2KKQbVfB2E)
-
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/_2KKQbVfB2E/0.jpg)](https://www.youtube.com/watch?v=_2KKQbVfB2E)
+These steps are then placed in a pipeline and used to produce the above video
 
 ## Discussion
 
